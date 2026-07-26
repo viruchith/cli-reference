@@ -1,4 +1,4 @@
-# Help Reference
+# CLI Reference
 
 A comprehensive command-line utilities and tools reference guide for macOS and Linux development environments.
 
