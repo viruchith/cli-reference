@@ -614,6 +614,7 @@ A quick-reference comparison mapping legacy Linux `net-tools` and classic networ
 | `iftop` / `iptraf` / `bmon` | `nethogs` | `bandwhich` | Real-time interface & per-process bandwidth monitoring |
 | `lsof -i` / `fuser` | `ss -p` | — | Socket process PID & open port ownership resolution |
 | `whois` | `whois` | `rdap`, `ipinfo` | Domain metadata & IP geolocation WHOIS lookups |
+| `stun` | `stunclient` / `stunserver` | `stuntman` | STUN protocol (RFC 5389/5780) NAT traversal & public IP discovery |
 
 ---
 
@@ -1408,6 +1409,39 @@ rdap example.com
 
 # Fetch IP address geolocation and ASN details using IPinfo CLI
 ipinfo 8.8.8.8
+```
+
+#### `stuntman` (`stunclient` / `stunserver`)
+
+An open-source STUN (Session Traversal Utilities for NAT) server and client implementation (RFC 5389, RFC 5780, RFC 3489). Used to discover public IP addresses, mapped ports, and NAT behavior (mapping & filtering types) for WebRTC, VoIP, and P2P applications.
+
+```bash
+# Query a public STUN server for your public IP address and mapped UDP port
+stunclient stunserver.stunprotocol.org
+
+# Perform a full RFC 5780 NAT behavior and filtering discovery test
+stunclient --mode full stunserver.stunprotocol.org
+
+# Send a STUN binding request to a specific port over TCP (default is UDP)
+stunclient --protocol tcp stunserver.stunprotocol.org 3478
+
+# Specify a custom local binding address and port for client requests
+stunclient --localaddr 192.168.1.50 --localport 5000 stun.l.google.com 19302
+
+# Force IPv6 mode for STUN server connectivity verification
+stunclient --family 6 stunserver.stunprotocol.org
+
+# Run a basic STUN server listening on default UDP port 3478
+stunserver
+
+# Start STUN server with verbose logging on a specific primary port
+stunserver --primaryport 3478 --verbosity 1
+
+# Run STUN server in full dual-interface mode for NAT behavior tests (RFC 5780)
+stunserver --mode full --primaryinterface 192.168.1.10 --altinterface 192.168.1.11
+
+# Start STUN server using settings loaded from a JSON configuration file
+stunserver --configfile /etc/stuntman/stunserver.conf
 ```
 
 ---
