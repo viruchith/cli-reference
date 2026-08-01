@@ -10,7 +10,7 @@ This repository contains detailed documentation and examples for:
 - **Development Language Runtimes & Package Managers** - Node.js, Python, `pnpm`, `uv`, and other runtime environments
 - **Media & Imaging Processing** - FFmpeg, ImageMagick, WebP tools, and video download utilities
 - **Version Control & Repositories** - Git and GitHub CLI reference
-- **Network Diagnostics & Transfer** - `curl`, Netcat, and networking tools
+- **Network Diagnostics & Utilities** - Comprehensive guide for `ping`, `traceroute`, `mtr`, `dig`, `nslookup`, `host`, `curl`, `wget`, `nc`, `socat`, `nmap`, `netstat`, `ss`, `lsof`, `tcpdump`, `tshark`, `iperf3`, `rsync`, `ssh`, `whois`, and more
 - **UNIX Core Utilities & File Management** - Essential tools like `find`, `xargs`, `tar`, and permissions management
 
 ## 🚀 Quick Start

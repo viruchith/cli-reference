@@ -585,32 +585,829 @@ gh repo create my-new-project --private --source=. --remote=upstream
 gh pr checkout 42
 ```
 
+### Network Diagnostics & Utilities
+
+#### Classic vs. Modern Network Utilities Reference
+
+A quick-reference comparison mapping legacy Linux `net-tools` and classic networking commands to their modern standard replacements (`iproute2`, `nftables`) and next-gen CLI tools (written in Rust, Go, and C).
+
+| Legacy / Traditional Command | Modern Standard Replacement (`iproute2` / System) | Next-Gen CLI Alternative (Rust / Go / Modern) | Primary Use Case |
+| :--- | :--- | :--- | :--- |
+| `ifconfig` | `ip addr` / `ip link` | `nmcli`, `networkctl` | Network interface address & link state configuration |
+| `route` | `ip route` | `nmcli route` | Displaying & modifying IP routing tables |
+| `netstat` | `ss` | `lsof -i`, `ss -p` | Active socket monitoring & listening port inspection |
+| `arp` | `ip neighbor` (`ip n`) | — | Address Resolution Protocol cache management |
+| `iwconfig` | `iw` | `nmcli device wifi` | Wireless network interface & Wi-Fi configuration |
+| `iptables` / `ip6tables` / `arptables` | `nftables` (`nft`) | `ufw`, `firewalld` | Packet filtering & stateful firewall rule management |
+| `ifup` / `ifdown` | `ip link set dev <iface> up/down` | `nmcli device connect/disconnect` | Toggling network interface link states |
+| `iptunnel` | `ip tunnel` | `wireguard` (`wg`) | IP tunneling & VPN encapsulation setup |
+| `ipmaddr` | `ip maddr` | — | IP multicast address group management |
+| `nameif` | `ip link set dev <iface> name <new>` | `udev` persistent naming | Renaming network interface device names |
+| `mii-tool` | `ethtool` | — | NIC physical link status & hardware autonegotiation |
+| `nslookup` / `host` | `dig`, `drill` | `doggo`, `dog`, `kdig` | DNS querying & domain record lookup |
+| `ping` / `ping6` | `ping` | `gping`, `trippy` | ICMP reachability, latency & graphical pinging |
+| `traceroute` / `tracepath` | `mtr` | `trippy`, `nexttrace` | Route tracing & intermediate hop loss analysis |
+| `tcpdump` | `tshark` | `termshark` | Live packet analysis & pcap file dissection |
+| `nc` (netcat) / `telnet` | `socat`, `ncat` | — | TCP/UDP socket relays, listeners & port testing |
+| `curl` / `wget` | `curl`, `wget` | `httpie`, `curlie`, `xh` | HTTP requests, file downloads & REST API interaction |
+| `nmap` | `nmap` | `rustscan`, `naabu` | Fast port scanning & host vulnerability auditing |
+| `iftop` / `iptraf` / `bmon` | `nethogs` | `bandwhich` | Real-time interface & per-process bandwidth monitoring |
+| `lsof -i` / `fuser` | `ss -p` | — | Socket process PID & open port ownership resolution |
+| `whois` | `whois` | `rdap`, `ipinfo` | Domain metadata & IP geolocation WHOIS lookups |
+
 ---
 
-### Network Diagnostics & Transfer (`curl`, `nc`)
+#### `ping` / `ping6`
+
+Standard network diagnostic utility that uses ICMP Echo Request and Reply messages to test host reachability, measure round-trip delay (latency), detect packet loss, and analyze Path MTU constraints.
+
+```bash
+# Send 5 ICMP echo requests to a target host and exit
+ping -c 5 8.8.8.8
+
+# Send pings with a custom 200ms interval (-i) and custom payload size of 1000 bytes (-s)
+ping -i 0.2 -s 1000 192.168.1.1
+
+# Test Path Maximum Transmission Unit (MTU) by disabling packet fragmentation (DF bit)
+ping -s 1472 -D 1.1.1.1
+
+# Perform IPv6 ping connectivity check
+ping6 -c 4 ipv6.google.com
+
+# Play an audible ping on response (-a) with quiet summary output (-q)
+ping -a -q -c 10 10.0.0.1
+```
+
+#### `traceroute` / `traceroute6` / `tracepath`
+
+Traces the hop-by-hop network path packets take to reach a remote host by incrementally increasing the IP Time-To-Live (TTL) value, helping identify network latency bottlenecks and routing failures.
+
+```bash
+# Trace route to host without resolving IP addresses to hostnames for faster output
+traceroute -n example.com
+
+# Use ICMP Echo Request probes instead of default UDP probes
+traceroute -I google.com
+
+# Use TCP SYN packets targeted at port 443 to bypass firewalls blocking UDP/ICMP
+traceroute -T -p 443 github.com
+
+# Trace path while automatically discovering Path MTU (Maximum Transmission Unit)
+tracepath -n 192.168.1.1
+
+# Trace IPv6 route limiting maximum hops to 15
+traceroute6 -m 15 ipv6.google.com
+```
+
+#### `mtr` (My TraceRoute)
+
+Combines the capabilities of `traceroute` and `ping` into a single dynamic, real-time network diagnostic tool that continuously updates packet loss and latency statistics across all intermediate hops.
+
+```bash
+# Launch interactive real-time network monitoring interface
+mtr 1.1.1.1
+
+# Generate a non-interactive summary report based on 10 probe cycles
+mtr --report --report-cycles=10 8.8.8.8
+
+# Run MTR using TCP SYN probes targeting port 80 without resolving DNS hostnames
+mtr -n -T -P 80 example.com
+
+# Output raw data report suitable for automated parsing scripts
+mtr --raw --report-cycles=5 192.168.1.1
+```
+
+#### `dig` (Domain Information Groper)
+
+A flexible and powerful DNS lookup utility for querying DNS name servers for specific resource records (A, AAAA, MX, TXT, NS, CNAME, SOA) and troubleshooting DNS resolution paths.
+
+```bash
+# Query the IPv4 address (A record) for a domain with short output format
+dig example.com A +short
+
+# Query MX (Mail Exchanger) records specifically using Google DNS server (8.8.8.8)
+dig @8.8.8.8 example.com MX
+
+# Inspect SPF, DKIM, and domain ownership TXT records
+dig example.com TXT
+
+# Perform a reverse DNS lookup to find the domain associated with an IP address
+dig -x 8.8.8.8
+
+# Trace DNS resolution step-by-step from root servers down to authoritative servers
+dig +trace example.com
+
+# Query all available DNS records displaying only the answer section
+dig example.com ANY +noall +answer
+```
+
+#### `nslookup`
+
+An interactive and non-interactive command-line tool used to query DNS name servers and verify domain name or IP address mappings.
+
+```bash
+# Perform standard DNS lookup against default configured DNS server
+nslookup example.com
+
+# Query MX records for a domain using Cloudflare DNS at 1.1.1.1
+nslookup -type=MX google.com 1.1.1.1
+
+# Query all available DNS records for a host
+nslookup -type=ANY github.com
+
+# Perform reverse DNS lookup for an IP address
+nslookup 1.1.1.1
+```
+
+#### `host`
+
+A simple, concise DNS lookup utility that converts hostnames to IP addresses and vice versa with clean, scriptable output.
+
+```bash
+# Display IPv4 and IPv6 addresses associated with a domain
+host google.com
+
+# Query mail exchanger (MX) records for a domain
+host -t MX github.com
+
+# Retrieve TXT records for SPF or domain validation
+host -t TXT example.com
+
+# Display verbose DNS details including SOA records and TTL parameters
+host -a example.com
+```
 
 #### `curl`
 
-A foundational data transfer tool utilized to hit endpoints and test networking.
+A foundational data transfer tool supporting HTTP, HTTPS, FTP, SFTP, and more. Essential for REST API testing, header inspection, file downloads, and connection timing benchmarks.
 
 ```bash
-# Send an authenticated POST request to an API passing header tokens
+# Send an authenticated POST request with JSON payload and custom headers
 curl -X POST https://api.example.com/v1/data \
      -H "Authorization: Bearer secret_token" \
      -H "Content-Type: application/json" \
      -d '{"status": "active"}'
+
+# Fetch HTTP response headers only while following redirects (HEAD request)
+curl -I -L https://example.com
+
+# Download a remote file preserving its original remote filename
+curl -O -L https://example.com/downloads/release.tar.gz
+
+# Route request through a SOCKS5/HTTP proxy while skipping SSL certificate checks
+curl -x http://proxy.local:8080 -k https://internal.dev
+
+# Benchmark detailed HTTP connection latency breakdown (DNS, TCP, TLS, TTFB, Total)
+curl -w "DNS: %{time_namelookup}s | Connect: %{time_connect}s | TLS: %{time_appconnect}s | TTFB: %{time_starttransfer}s | Total: %{time_total}s\n" -o /dev/null -s https://example.com
+
+# Download large file with rate limiting (1 MB/s) and auto-resume capability (-C -)
+curl --limit-rate 1M -C - -O https://example.com/large-archive.iso
 ```
 
-#### `nc` (Netcat)
+#### `wget`
 
-The network networking utility ("Swiss army knife of TCP/IP") used to read and write data across network connections.
+A non-interactive network file retriever engineered for reliable background downloads, recursive web mirroring, and automatic transfer resumption.
 
 ```bash
-# Spin up a temporary listening server bound to port 8080 to monitor input traffic
+# Download a file directly to the current working directory
+wget https://example.com/dataset.zip
+
+# Resume an interrupted large file download
+wget -c https://example.com/large-file.iso
+
+# Recursively mirror a website section for offline viewing without parent traversal
+wget --mirror --convert-links --page-requisites --no-parent https://example.com/docs/
+
+# Download a list of URLs in background (-b) with rate limit cap of 500 KB/s
+wget --limit-rate=500k -b -i urls.txt
+
+# Download bypassing SSL certificate checks with custom User-Agent header
+wget --user-agent="Mozilla/5.0" --no-check-certificate https://example.com/data.json
+```
+
+#### `nc` (Netcat) / `ncat`
+
+The "Swiss Army Knife" of TCP/IP networking. Reads and writes data across network connections using TCP or UDP, supporting port scanning, listening servers, file transfers, and raw banner grabbing.
+
+```bash
+# Perform a fast TCP port scan checking ports 20 through 80 on a host
+nc -zv 192.168.1.50 20-80
+
+# Check if UDP port 53 (DNS) is open on target IP
+nc -uzv 192.168.1.1 53
+
+# Spin up a temporary listening server on port 8080 to monitor incoming traffic
 nc -l 8080
 
-# Perform a lightning-fast port scan checking TCP ports 20 through 80 on a host
-nc -zv 192.168.1.15 20-80
+# Transfer a file directly between two systems (Receiver: `nc -l 9000 > output.txt`)
+nc 192.168.1.10 9000 < input.txt
+
+# Manually construct and send a raw HTTP GET request to a web server
+printf "GET / HTTP/1.1\r\nHost: example.com\r\nConnection: close\r\n\r\n" | nc example.com 80
+```
+
+#### `socat` (SOcket CAT)
+
+A powerful multipurpose relay tool for bidirectional data transfer between two independent data streams (TCP, UDP, SSL/TLS, UNIX domain sockets, execution pipes, files).
+
+```bash
+# Set up a TCP port forwarder redirecting local port 8080 to a remote web server on port 80
+socat TCP-LISTEN:8080,fork TCP:192.168.1.100:80
+
+# Connect interactively to a network socket with readline history and editing support
+socat READLINE TCP:192.168.1.1:23
+
+# Expose a shell securely over an encrypted SSL/TLS socket connection
+socat OPENSSL-LISTEN:443,cert=server.crt,key=server.key,verify=0 EXEC:/bin/bash
+
+# Bridge a local UNIX domain socket to a TCP port socket
+socat UNIX-LISTEN:/tmp/app.sock,fork TCP:127.0.0.1:3000
+```
+
+#### `nmap`
+
+The premier open-source network exploration, port scanner, and vulnerability auditing utility. Identifies live hosts, open ports, service versions, operating systems, and security flaws.
+
+```bash
+# Perform a fast, stealthy TCP SYN scan on the top 1000 common ports
+nmap -sS -p 1-1000 192.168.1.1
+
+# Detect operating system details and running service versions on target ports
+nmap -sV -O -p 22,80,443 target.com
+
+# Perform aggressive scan (OS detection, version detection, script scanning, traceroute)
+nmap -A 192.168.1.0/24
+
+# Host discovery ping scan across a subnet without scanning individual ports
+nmap -sn 192.168.1.0/24
+
+# Run security vulnerability assessment scripts (NSE) against target host
+nmap --script vuln target.com
+
+# Execute HTTP header audit script saving output to a readable text file
+nmap -p 80 --script http-headers target.com -oN scan_results.txt
+```
+
+#### `netstat`
+
+A classic network monitoring tool for displaying active TCP/UDP connections, listening ports, kernel IP routing tables, interface statistics, and multicast memberships.
+
+```bash
+# List all listening TCP and UDP sockets with numerical IP addresses and port numbers
+netstat -tuln
+
+# List listening sockets with associated PIDs and process names (Linux)
+netstat -tulnp
+
+# Display all active network sockets with detailed process information (macOS)
+netstat -anv
+
+# Display kernel IP routing table with numerical addresses
+netstat -rn
+
+# Display summary network statistics broken down by protocol (IP, ICMP, TCP, UDP)
+netstat -s
+
+# Display network interface packet counters and error stats
+netstat -i
+```
+
+#### `ss` (Socket Statistics)
+
+A modern, high-speed replacement for `netstat` on Linux systems. Directly parses kernel netlink sockets to display socket states, TCP memory usage, and process associations.
+
+```bash
+# List all listening TCP and UDP sockets without resolving hostnames or port names
+ss -tuln
+
+# Show listening sockets along with process names and PIDs
+ss -tulpn
+
+# Display all active, established TCP connections
+ss -t state established
+
+# Filter established TCP connections targeting web ports (80 or 443)
+ss -t state established '( dport = :https or dport = :http )'
+
+# Display overall socket summary breakdown by protocol and connection state
+ss -s
+
+# View active TCP sockets accompanied by detailed socket memory allocation stats
+ss -tm
+```
+
+#### `lsof` (List Open Files - Network Sockets)
+
+Lists open files and active network sockets held by running processes. Indispensable for discovering which process is bound to a specific port or interface.
+
+```bash
+# Uncover which process PID is currently bound to port 8080
+lsof -i :8080
+
+# List all TCP sockets in LISTEN state with associated PIDs and user accounts
+lsof -iTCP -sTCP:LISTEN
+
+# Show all network connections owned by a specific user account
+lsof -i -u www-data
+
+# List all active connections established to or from a specific IP address
+lsof -i @192.168.1.50
+
+# List open UDP sockets without resolving hostnames or port service names
+lsof -nP -iUDP
+```
+
+#### `ifconfig`
+
+Classic interface configuration utility (macOS, BSD, Linux) used to display network interface parameters, assign IP addresses, toggle interface states, and adjust MTU settings.
+
+```bash
+# Display configuration and operating status for all active network interfaces
+ifconfig
+
+# Show detailed parameters for a specific network interface (e.g., en0)
+ifconfig en0
+
+# Temporarily disable and re-enable a network interface
+sudo ifconfig en0 down
+sudo ifconfig en0 up
+
+# Assign a static IP address and netmask to a network interface
+sudo ifconfig en0 inet 192.168.1.150 netmask 255.255.255.0
+
+# Set Maximum Transmission Unit (MTU) size to 9000 bytes for Jumbo Frames
+sudo ifconfig en0 mtu 9000
+```
+
+#### `ip` (iproute2 Suite - Linux Standard)
+
+Modern Linux networking tool suite replacing `ifconfig`, `route`, and `arp`. Manages network interfaces, IP address assignments, routing tables, and neighbor ARP caches.
+
+```bash
+# Display IP addresses and netmasks assigned to all network interfaces
+ip addr show
+
+# Bring a network interface up or down
+ip link set eth0 up
+ip link set eth0 down
+
+# Assign an IP address with CIDR netmask to an interface
+ip addr add 192.168.1.50/24 dev eth0
+
+# Display kernel IP routing table
+ip route show
+
+# Configure default gateway route for internet traffic forwarding
+ip route add default via 192.168.1.1 dev eth0
+
+# Display local ARP / neighbor cache table
+ip neigh show
+```
+
+#### `route`
+
+Displays and manipulates the IP routing table in kernel memory, defining static paths and default gateways for network packet forwarding.
+
+```bash
+# Print numerical IP routing table
+route -n
+
+# Add a static net route directing traffic for 10.0.0.0/8 through a specified gateway
+sudo route add -net 10.0.0.0/8 gw 192.168.1.254
+
+# Remove existing default gateway route
+sudo route delete default
+
+# Set new default gateway router address
+sudo route add default 192.168.1.1
+```
+
+#### `arp` / `ip neighbor`
+
+Displays and manages the Address Resolution Protocol (ARP) cache mapping IPv4 network addresses to physical MAC hardware addresses on local subnet segments.
+
+```bash
+# Display all active IPv4 to MAC address mappings in local ARP cache
+arp -a
+
+# Delete a specific IP entry from the ARP cache table
+arp -d 192.168.1.50
+
+# Manually add a static ARP entry binding an IP address to a MAC address
+arp -s 192.168.1.10 00:11:22:33:44:55
+
+# Modern Linux command to view neighbor ARP table
+ip neighbor show
+```
+
+#### `tcpdump`
+
+The command-line packet analyzer standard. Captures, filters, and records raw packet header and payload traffic on network interfaces for deep protocol debugging.
+
+```bash
+# Capture live network traffic on interface en0
+sudo tcpdump -i en0
+
+# Capture 100 packets without resolving IP addresses or port service names (-nn)
+sudo tcpdump -i any -nn -c 100
+
+# Filter traffic to capture HTTP and HTTPS packets only
+sudo tcpdump -i eth0 port 80 or port 443
+
+# Capture SSH traffic originating from a specific source host IP address
+sudo tcpdump -i eth0 src host 192.168.1.50 and dst port 22
+
+# Record captured packets directly to a raw `.pcap` file for Wireshark analysis
+sudo tcpdump -i eth0 -w capture.pcap
+
+# Read pcap file filtering exclusively for TCP SYN/ACK handshake packets
+tcpdump -r capture.pcap -nn "tcp[tcpflags] & (tcp-syn|tcp-ack) != 0"
+```
+
+#### `tshark` (Wireshark CLI)
+
+Terminal-based version of Wireshark. Offers advanced protocol dissection, display filtering, and field extraction directly from live interfaces or capture files without a GUI.
+
+```bash
+# Capture 50 packets on interface en0 displaying detailed protocol breakdown
+tshark -i en0 -c 50
+
+# Read pcap capture file applying Wireshark display filter for HTTP GET/POST requests
+tshark -r capture.pcap -Y "http.request"
+
+# Extract specific protocol fields (source IP, dest IP, HTTP host, URI) as tabbed values
+tshark -r capture.pcap -T fields -e ip.src -e ip.dst -e http.host -e http.request.uri
+
+# Extract TLS Server Name Indication (SNI) hostnames from encrypted client handshakes
+tshark -r capture.pcap -Y "tls.handshake.type == 1" -T fields -e tls.handshake.extensions_server_name
+```
+
+#### `networkQuality` (macOS Native)
+
+Built-in macOS command-line network benchmark tool that measures upload/download capacity alongside network responsiveness (RPM - Round-trips Per Minute under load).
+
+```bash
+# Run standard parallel upload/download throughput and latency benchmark test
+networkQuality
+
+# Execute parallel test checking both IPv4 and IPv6 network streams concurrently
+networkQuality -p
+
+# Display verbose real-time performance metrics during benchmark execution
+networkQuality -v
+
+# Run sequential download followed by upload test instead of simultaneous testing
+networkQuality -s
+
+# Output benchmark results formatted as machine-readable JSON data
+networkQuality -j
+```
+
+#### `iperf3`
+
+Point-to-point network bandwidth measurement tool. Generates customized TCP and UDP data streams between a server and client to test maximum throughput and packet loss.
+
+```bash
+# Launch iperf3 in listening server mode on default port 5201
+iperf3 -s
+
+# Run 30-second throughput test against server using 4 parallel TCP streams
+iperf3 -c 192.168.1.100 -t 30 -P 4
+
+# Run UDP bandwidth test targeting 100 Mbps rate to measure packet loss and jitter
+iperf3 -c 192.168.1.100 -u -b 100M
+
+# Run throughput test in reverse mode (measure download performance from server to client)
+iperf3 -c 192.168.1.100 -R
+
+# Export benchmark test results into a JSON output file
+iperf3 -c 192.168.1.100 -J -o performance.json
+```
+
+#### `rsync`
+
+Fast and versatile file synchronization and copying tool over local or SSH connections. Uses a delta-transfer algorithm to transfer only changed blocks of files.
+
+```bash
+# Synchronize local directory to remote server over SSH showing progress (-P)
+rsync -avzP ~/Documents user@remote.server.com:/backup/Documents
+
+# Mirror local directory to remote server, deleting remote files missing locally
+rsync -avz --delete ~/Website/ user@remote.server.com:/var/www/html/
+
+# Synchronize files using custom SSH key and alternate SSH port
+rsync -avz -e "ssh -p 2222 -i ~/.ssh/deploy_key" ./dist/ user@remote.com:/app
+
+# Limit bandwidth consumption to 1000 KB/s during synchronization
+rsync -avz --bwlimit=1000 ~/large_folder/ /Volumes/Backup/
+```
+
+#### `ssh` / `scp` / `sftp`
+
+Secure Shell network suite providing encrypted command-line logins, remote file copying, dynamic SOCKS proxying, and local/remote port tunneling.
+
+```bash
+# Connect to remote server using specific private SSH key and custom port
+ssh -i ~/.ssh/id_ed25519 -p 2222 user@remote.host.com
+
+# Local port forwarding: map local port 8080 to PostgreSQL (5432) on remote DB host
+ssh -L 8080:localhost:5432 user@remote.db.com
+
+# Create dynamic SOCKS5 proxy on local port 1080 without executing remote shell command
+ssh -D 1080 -N user@remote.host.com
+
+# Recursively copy local folder to remote destination via SCP on non-standard port
+scp -P 2222 -r ./build user@remote.host.com:/var/www/
+
+# Launch interactive SFTP session utilizing identity file authentication
+sftp -i ~/.ssh/id_rsa user@remote.host.com
+```
+
+#### `whois`
+
+Lookup utility for querying WHOIS protocol databases to fetch domain name registration metadata, registrar info, IP address range allocations, and ASN ownership details.
+
+```bash
+# Query domain WHOIS record for registration status, creation date, and nameservers
+whois example.com
+
+# Query IP address WHOIS record for netblock allocation and owner organization
+whois 8.8.8.8
+
+# Query specific regional WHOIS server for BGP routing information
+whois -h whois.radb.net 1.1.1.1
+```
+
+#### `hping3`
+
+Command-line oriented TCP/IP packet assembler and analyzer. Enables custom ICMP, UDP, and TCP packet crafting for firewall probing, port scanning, and stress testing.
+
+```bash
+# Send 4 TCP SYN packets targeted at port 80 to test firewall rule behavior
+sudo hping3 -S -p 80 -c 4 target.com
+
+# Perform ICMP traceroute with detailed header inspection
+sudo hping3 --traceroute -V -1 target.com
+
+# Probe target UDP port 53 to verify UDP service response
+sudo hping3 -2 -p 53 -c 3 192.168.1.1
+
+# Perform high-frequency TCP port probing to test SYN flood resilience
+sudo hping3 -S -p 443 --fast 192.168.1.1
+```
+
+#### `ipcalc`
+
+IPv4/IPv6 subnet calculator that takes IP addresses and netmasks or CIDR prefixes and calculates network, broadcast, wildcard masks, and host ranges.
+
+```bash
+# Calculate network address, broadcast, and host range for a /24 subnet
+ipcalc 192.168.1.100/24
+
+# Convert dotted decimal netmask to CIDR notation and show range parameters
+ipcalc 10.0.0.0 255.255.240.0
+
+# Output plain text calculation without color formatting or HTML markers
+ipcalc -b 172.16.0.0/16
+```
+
+#### `speedtest-cli`
+
+Command-line client for measuring internet bandwidth download speed, upload speed, and latency using Speedtest.net servers.
+
+```bash
+# Execute standard internet speed test against nearest server node
+speedtest-cli
+
+# Display simplified results showing only Ping, Download, and Upload speeds
+speedtest-cli --simple
+
+# Export speed test metrics as structured JSON payload
+speedtest-cli --json
+
+# List nearby Speedtest.net servers with server IDs
+speedtest-cli --list
+
+# Force speed test execution against a specific server ID
+speedtest-cli --server 1234
+```
+
+#### `sniffnet`
+
+Modern, cross-platform CLI tool for comfortably monitoring live network traffic intensity, bandwidth usage, and active application protocols in real-time.
+
+```bash
+# Launch interactive real-time traffic and protocol monitoring terminal interface
+sniffnet
+```
+
+#### `iftop`
+
+Real-time interface bandwidth monitor that displays bandwidth usage on a specific network interface broken down by communicating host pairs.
+
+```bash
+# Monitor real-time network traffic bandwidth on default interface
+sudo iftop
+
+# Monitor bandwidth usage specifically on interface en0
+sudo iftop -i en0
+
+# Disable DNS hostname resolution and port service lookup for faster real-time display
+sudo iftop -n -N
+
+# Filter monitoring display to HTTP and HTTPS web traffic only
+sudo iftop -f "port 80 or port 443"
+```
+
+#### `nethogs`
+
+Network monitoring utility that groups network bandwidth usage by process name and process ID (PID) rather than breaking down traffic per IP address.
+
+```bash
+# Monitor real-time network process bandwidth usage on default interface
+sudo nethogs
+
+# Monitor process bandwidth usage on specified interface en0
+sudo nethogs en0
+
+# Run in trace mode continuously appending bandwidth output for logging
+sudo nethogs -t
+```
+
+#### `ethtool`
+
+Linux kernel driver utility for querying and controlling network interface card (NIC) hardware parameters like link speed, duplex state, offloading features, and auto-negotiation.
+
+```bash
+# Display link status, speed, duplex mode, and supported auto-negotiation modes
+ethtool eth0
+
+# Force interface speed to 1000 Mbps full duplex with auto-negotiation disabled
+sudo ethtool -s eth0 speed 1000 duplex full autoneg off
+
+# Query hardware protocol offloading settings (e.g., TCP segmentation offload)
+ethtool -k eth0
+
+# Display low-level hardware statistics and physical packet error counters
+ethtool -S eth0
+```
+
+#### `iw`
+
+Modern Linux wireless network configuration tool replacing `iwconfig`. Controls Wi-Fi interfaces, scans access points, connects to SSIDs, and inspects wireless link quality.
+
+```bash
+# List all wireless devices and their capabilities
+iw dev
+
+# Scan for nearby Wi-Fi networks on interface wlan0
+sudo iw dev wlan0 scan | grep SSID
+
+# Display current wireless connection status and link quality
+iw dev wlan0 link
+```
+
+#### `nftables` (`nft`)
+
+Modern Linux packet filtering framework replacing `iptables`, `ip6tables`, and `arptables`. Features a unified syntax, higher throughput, and atomic rule updates.
+
+```bash
+# List current nftables ruleset layout
+sudo nft list ruleset
+
+# Create a filter table and add an input chain allowing HTTP, HTTPS, and SSH
+sudo nft add table inet filter
+sudo nft add chain inet filter input { type filter hook input priority 0 \; }
+sudo nft add rule inet filter input tcp dport { 22, 80, 443 } accept
+
+# Flush all active ruleset rules
+sudo nft flush ruleset
+```
+
+#### `nmcli` / `networkctl`
+
+Command-line utilities for NetworkManager (`nmcli`) and systemd-networkd (`networkctl`) to manage network devices, active connections, Wi-Fi networks, and routing.
+
+```bash
+# List all network interfaces and connection status
+nmcli device status
+
+# Connect to a Wi-Fi access point with passphrase
+nmcli device wifi connect "SSID_NAME" password "WIFI_PASSWORD"
+
+# Show systemd-networkd interface link states
+networkctl list
+```
+
+#### `gping`
+
+A modern ping utility that renders a real-time ASCII graph of latency directly inside your terminal, supporting concurrent pinging of multiple hosts for visual comparisons.
+
+```bash
+# Graph ping latency to Google DNS in real-time
+gping 8.8.8.8
+
+# Compare latency between multiple destinations simultaneously
+gping 8.8.8.8 1.1.1.1 9.9.9.9
+```
+
+#### `trippy` (`trip`)
+
+A next-generation, interactive network diagnostic TUI tool combining `ping`, `traceroute`, and `mtr` into a customizable interface with hop loss tracking and multipath tracing.
+
+```bash
+# Launch interactive TUI traceroute and ping matrix
+trip 1.1.1.1
+
+# Trace route using TCP SYN probes targeted at port 443
+trip example.com -m tcp -p 443
+```
+
+#### `nexttrace`
+
+An open-source, visual route tracking tool providing IP geolocation (country, city, ISP), Autonomous System Numbers (ASN), and BGP route details for each hop.
+
+```bash
+# Perform visual traceroute with IP geolocation breakdown
+nexttrace 1.1.1.1
+
+# Perform fast TCP-mode trace targeting port 80
+nexttrace --tcp --port 80 example.com
+```
+
+#### `doggo` / `kdig` / `drill`
+
+Modern DNS query clients designed as alternatives to `dig` and `nslookup`. Support colored output, JSON formatting, DNS-over-HTTPS (DoH), and DNS-over-TLS (DoT).
+
+```bash
+# Perform DNS lookup using Doggo with human-friendly output
+doggo example.com
+
+# Query DNS-over-HTTPS (DoH) using Cloudflare resolver outputting JSON
+doggo example.com @https://cloudflare-dns.com/dns-query --json
+
+# Query DNS records using Drill (from ldns suite)
+drill example.com MX
+```
+
+#### `rustscan` / `naabu`
+
+Ultra-fast modern port scanners designed to rapidly scan thousands of ports per second before piping open ports into `nmap` for detailed service inspection.
+
+```bash
+# Perform an ultra-fast scan of target IP, passing open ports directly to Nmap
+rustscan -a 192.168.1.1 -- -sV -sC
+
+# Fast host port discovery using Naabu (ProjectDiscovery)
+naabu -host example.com -p 80,443,8080,8443
+```
+
+#### `bandwhich`
+
+A terminal bandwidth utilization tool written in Rust that breaks down network usage by process name, remote socket connection, and target IP address.
+
+```bash
+# Monitor interface bandwidth categorized by processes and connections
+sudo bandwhich
+
+# Monitor bandwidth on specific interface without resolving DNS hostnames
+sudo bandwhich -i en0 -n
+```
+
+#### `curlie` / `xh`
+
+Modern HTTP clients designed as friendly cURL replacements. Combine cURL's raw speed and feature set with HTTPie's intuitive syntax and colorized, pretty-printed JSON output.
+
+```bash
+# Send GET request with colored JSON output using curlie
+curlie GET https://api.github.com/users/octocat
+
+# Send POST request passing JSON payload using xh
+xh POST https://httpbin.org/post name="Jane Doe" role="admin"
+```
+
+#### `termshark`
+
+A terminal user interface (TUI) for Wireshark (`tshark`), allowing terminal users to inspect pcap files and live captures using a pane-based interface similar to the Wireshark GUI.
+
+```bash
+# Open pcap file inside terminal UI viewer
+termshark -r capture.pcap
+
+# Capture live traffic on interface en0 inside terminal UI
+termshark -i en0
+```
+
+#### `rdap` / `ipinfo`
+
+Modern replacements for traditional WHOIS. Use Registration Data Access Protocol (RDAP) and REST APIs for structured JSON domain, IP address, and ASN geolocation lookups.
+
+```bash
+# Query domain registration metadata via RDAP protocol
+rdap example.com
+
+# Fetch IP address geolocation and ASN details using IPinfo CLI
+ipinfo 8.8.8.8
 ```
 
 ---
