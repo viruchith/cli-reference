@@ -12,6 +12,7 @@ This repository contains detailed documentation and examples for:
 - **Version Control & Repositories** - Git and GitHub CLI reference
 - **Network Diagnostics & Utilities** - Comprehensive guide for `ping`, `traceroute`, `mtr`, `dig`, `nslookup`, `host`, `curl`, `wget`, `nc`, `socat`, `nmap`, `netstat`, `ss`, `lsof`, `tcpdump`, `tshark`, `iperf3`, `rsync`, `ssh`, `whois`, and more
 - **Text Processing & Modern CLI Utilities** - Modern CLI replacements for search, stream editing, file viewing, data parsing, diffing, process monitoring, and directory navigation (`rg`, `bat`, `sd`, `ast-grep`, `mlr`, `choose`, `delta`, `difftastic`, `tokei`, `hexyl`, `jaq`, `jless`, `eza`, `lsd`, `dust`, `duf`, `procs`, `btop`, `tldr`, `zoxide`, etc.)
+- **Archive & Compression Utilities** - Multi-threaded and unified replacements for tarballs, gzip, bzip2, xz, zip, rar, 7z, and stream extraction (`pigz`, `zstd`, `pbzip2`, `pixz`, `unar`, `7zz`, `ouch`, `dtrx`, `zstdcat`, `lz4`, volume splitting, etc.)
 - **UNIX Core Utilities & File Management** - Essential tools like `find`, `xargs`, `tar`, and permissions management
 
 ## 🚀 Quick Start
