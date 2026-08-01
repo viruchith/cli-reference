@@ -1412,6 +1412,351 @@ ipinfo 8.8.8.8
 
 ---
 
+### Text Processing & Modern CLI Utilities
+
+#### Classic vs. Modern Text & CLI Utilities Reference
+
+A quick-reference comparison mapping classic UNIX text manipulation, search, system monitoring, and shell navigation commands to their modern, high-performance CLI alternatives (written in Rust, Go, C, and modern C++).
+
+| Classic / Traditional Command | Modern Standard / Popular Tool | Next-Gen CLI Alternative (Rust / Go / Modern) | Primary Use Case |
+| :--- | :--- | :--- | :--- |
+| `grep` | `ag` (The Silver Searcher), `ack` | `ripgrep` (`rg`) | Fast text & regex search across files |
+| `cat` | `cat` | `bat` | File viewing with syntax highlighting & git integration |
+| `head` / `tail` | `multitail` | `bat`, `hwatch` | File start/end inspection & live log watching |
+| `less` / `more` | `less` | `bat`, `ov`, `moar` | Terminal pager with search & line wrapping |
+| `sed` | `sed` | `sd`, `ast-grep` (`sg`) | Stream editing, string find/replace & AST refactoring |
+| `awk` | `awk` | `miller` (`mlr`), `choose`, `fq` | Structured text processing, field extraction & binary query |
+| `cut` | `cut` | `choose`, `tsv-utils` | Delimiter-based column & field slicing |
+| `diff` | `diff` | `delta`, `difftastic` (`difft`) | File comparison, git diff syntax highlighting & AST diffing |
+| `wc` | `wc` | `cw`, `tokei`, `scc` | Line, word, byte counting & source code metrics |
+| `uniq` | `uniq` | `huniq` | Duplicate line filtering & high-speed hash-based deduplication |
+| `sort` | `sort` | `miller` (`mlr`), `huniq` | Line ordering & structured data sorting |
+| `tr` | `tr` | `sd` | Character translation & pattern replacement |
+| `find` | `find` | `fd` | Recursive file directory searching |
+| `hexdump` / `xxd` / `od` | `hexdump`, `xxd` | `hexyl` | Binary hex viewing with colorized byte breakdown |
+| `jq` | `jq` | `jaq`, `fx`, `jless` | JSON processing, interactive navigation & query execution |
+| `tree` | `tree` | `eza --tree`, `lsd --tree`, `tre` | Graphical directory tree structure display |
+| `ls` | `ls` | `eza` (formerly `exa`), `lsd` | File & directory listing with icons, colors & git status |
+| `du` | `du` | `dust` (`du-dust`), `ncdu` | Disk usage analysis & interactive visual disk profiling |
+| `df` | `df` | `duf` | Disk filesystem space usage display with colorized graphs |
+| `ps` | `ps` | `procs` | Process listing with colored columns, tree views & port lookups |
+| `top` / `htop` | `htop` | `btop`, `bottom` (`btm`) | Real-time interactive CPU, GPU, memory & process monitoring |
+| `man` | `man` | `tldr` (`tealdeer`), `cheat`, `navi` | Command manual pages, simplified examples & cheat sheets |
+| `cd` | `cd` | `zoxide` (`z`), `autojump` (`j`) | Fast directory jumping using frecency-based fuzzy matching |
+
+---
+
+#### `grep` / `ripgrep` (`rg`) / `ag` / `ack`
+
+Tools for searching regex patterns across single files or large codebase directories.
+
+```bash
+# Standard POSIX grep search across files recursively ignoring binary files
+grep -rnI "error_code" /var/log/
+
+# Ripgrep: Blazing fast search respecting .gitignore rules
+rg "function processData" -g "*.js"
+
+# Search exact word matches case-insensitively using Ripgrep
+rg -i -w "todo"
+
+# Search codebases using The Silver Searcher (ag)
+ag --python "class User"
+
+# Search JavaScript files using ack
+ack --js "addEventListener"
+```
+
+#### `cat` / `bat`
+
+Utilities for printing, concatenating, and viewing file contents in the terminal.
+
+```bash
+# Print file contents using standard cat
+cat /etc/hosts
+
+# View file with bat: syntax highlighting, line numbers, and git modifications
+bat src/index.ts
+
+# Plain output mode in bat without headers or decorations (cat replacement)
+bat -p config.yaml
+
+# Explicitly set syntax language for unlabelled or piped data
+cat payload.json | bat -l json
+```
+
+#### `head` / `tail` / `multitail` / `hwatch`
+
+Utilities for inspecting the beginning or end of files, watching live log streams, and monitoring command output changes.
+
+```bash
+# View the first 20 lines of a large file
+head -n 20 server.log
+
+# Monitor new incoming log lines in real-time
+tail -f -n 50 /var/log/syslog
+
+# Monitor multiple log files concurrently in split terminal windows using MultiTail
+multitail /var/log/nginx/access.log /var/log/nginx/error.log
+
+# Execute command repeatedly showing colored diffs of changes using hwatch
+hwatch -n 1 "ls -la /tmp"
+```
+
+#### `less` / `more` / `ov` / `moar`
+
+Terminal paging utilities that allow forward/backward navigation and searching through large text files or command outputs.
+
+```bash
+# Open large log file in less with line numbers (-N) and follow mode (+F)
+less -N +F application.log
+
+# Open file with ov pager featuring header pinning and column view
+ov --header 1 data.tsv
+
+# Open file with moar pager featuring automatic color retention and search
+moar document.md
+```
+
+#### `sed` / `sd` / `ast-grep` (`sg`)
+
+Stream editors and structural search/replace tools for string substitution and code AST refactoring.
+
+```bash
+# In-place regex substitution using standard sed
+sed -i 's/http:\/\/localhost/https:\/\/api.example.com/g' config.env
+
+# Intuitive regex search and replace using sd (Rust)
+sd '(\d{4})-(\d{2})-(\d{2})' '$2/$3/$1' dates.txt
+
+# Structural AST-based code search and rewrite using ast-grep (sg)
+sg -p 'console.log($MSG)' -r 'logger.info($MSG)' --lang typescript
+```
+
+#### `awk` / `miller` (`mlr`) / `choose` / `fq`
+
+Structured text parsing, field extraction, data formatting, and binary stream querying tools.
+
+```bash
+# Print 1st and 3rd columns from comma-delimited data using AWK
+awk -F',' '{print $1, $3}' users.csv
+
+# Process CSV data using Miller: filter rows and format output as JSON
+mlr --csv --ojson filter '$age >= 21' data.csv
+
+# Extract 1st and 3rd fields using human-friendly choose utility
+choose 0 2 < input.txt
+
+# Query and inspect binary file structures (MP4, PCAP, ELF, ZIP) using fq
+fq . capture.pcap
+```
+
+#### `cut` / `tsv-utils`
+
+Delimiter-based text slicing and tab-separated data processing tools.
+
+```bash
+# Extract the 1st and 5th fields from system passwd file using cut
+cut -d':' -f1,5 /etc/passwd
+
+# Filter and select specific columns from TSV data using tsv-utils
+tsv-select -f 1,3,4 data.tsv
+```
+
+#### `diff` / `delta` / `difftastic` (`difft`)
+
+File comparison utilities providing side-by-side diffs, syntax highlighting, and AST-aware structural code comparison.
+
+```bash
+# Standard unified diff between two files
+diff -u old_version.py new_version.py
+
+# View git diff with syntax highlighting and side-by-side views using delta
+git diff | delta
+
+# Perform structural AST code diff using Difftastic (understands syntax syntax, not just lines)
+difft file_v1.js file_v2.js
+```
+
+#### `wc` / `cw` / `tokei` / `scc`
+
+Word, line, character count tools and specialized source code metrics counters.
+
+```bash
+# Count total lines, words, and byte size of a file using wc
+wc -l -w -c file.txt
+
+# Count source code lines, comments, and blank lines by language using Tokei
+tokei src/
+
+# Fast code counter with complexity estimates using scc
+scc .
+```
+
+#### `uniq` / `huniq`
+
+Command-line utilities for filtering duplicate lines from text streams.
+
+```bash
+# Count occurrences of unique sorted lines using standard uniq
+sort access.log | uniq -c | sort -nr
+
+# High-speed hash-based deduplication without pre-sorting using huniq
+cat massive_list.txt | huniq
+```
+
+#### `hexdump` / `xxd` / `od` / `hexyl`
+
+Hexadecimal and binary data viewing utilities for inspecting raw byte offsets.
+
+```bash
+# Display binary file bytes in canonical hex and ASCII format
+hexdump -C binary.bin
+
+# Create hex dump using xxd (reversible back to binary with xxd -r)
+xxd application.wasm
+
+# Colorized command-line hex viewer with byte category highlighting using hexyl
+hexyl --length 512 image.png
+```
+
+#### `jq` / `jaq` / `fx` / `jless`
+
+JSON data processing, filtering, interactive terminal viewing, and query execution tools.
+
+```bash
+# Extract specific keys and filter arrays using jq
+curl -s https://api.github.com/repos/cli/cli | jq '{name: .name, stars: .stargazers_count}'
+
+# High-performance Rust alternative to jq (jaq)
+cat data.json | jaq '.items[].id'
+
+# Interactive JSON viewer and JS processing environment using fx
+fx data.json
+
+# Vim-like interactive JSON viewer with expanding/collapsing using jless
+jless payload.json
+```
+
+#### `tree` / `eza --tree` / `lsd --tree` / `tre`
+
+Graphical directory tree layout viewers displaying nested directory hierarchies.
+
+```bash
+# Print directory tree up to 2 levels deep ignoring git and node_modules
+tree -L 2 -I 'node_modules|.git'
+
+# Render directory tree with file icons and git status using eza
+eza --tree --level=2 --icons
+
+# Modern directory tree with automatic .gitignore filtering using tre
+tre
+```
+
+#### `ls` / `eza` / `lsd`
+
+File and directory listing utilities with colorization, file type icons, and git integration.
+
+```bash
+# Standard detailed file listing
+ls -la
+
+# Modern ls replacement (eza) with colorized metadata, icons, and git status
+eza -la --git --icons --group-directories-first
+
+# Next-gen ls command (lsd) featuring colorized grid layouts and file icons
+lsd -la --header
+```
+
+#### `du` / `dust` (`du-dust`) / `ncdu`
+
+Disk space usage estimation and interactive terminal disk profiling tools.
+
+```bash
+# Human-readable disk usage calculation using standard du
+du -sh ~/Documents/*
+
+# Graphical terminal disk usage tree representation using dust
+dust
+
+# Interactive ncurses-based disk usage analyzer (navigate and clean disk space)
+ncdu /var/log
+```
+
+#### `df` / `duf`
+
+Filesystem disk space usage tools showing mounted storage volumes and available capacities.
+
+```bash
+# Display mounted filesystems and human-readable capacity using df
+df -h
+
+# Modern colorful disk usage utility (duf) with clean table layouts
+duf
+```
+
+#### `ps` / `procs`
+
+Process monitoring and listing utilities displaying active system PIDs, resource usage, and tree hierarchies.
+
+```bash
+# Search for active process by name using standard ps
+ps aux | grep node
+
+# Modern process viewer (procs) with colored columns, tree view, and port lookups
+procs node --tree
+```
+
+#### `top` / `htop` / `btop` / `bottom` (`btm`)
+
+Real-time interactive system resource monitors tracking CPU, GPU, RAM, swap, processes, and disks.
+
+```bash
+# Interactive system monitor with mouse support and colorized meters (htop)
+htop
+
+# Modern, feature-rich TUI system monitor with graphs (btop)
+btop
+
+# Cross-platform graphical system monitor (bottom / btm)
+btm
+```
+
+#### `man` / `tldr` (`tealdeer`) / `cheat` / `navi`
+
+Documentation viewers, community-driven cheat sheets, and interactive command-line snippet lookup tools.
+
+```bash
+# Standard system manual page
+man tar
+
+# Practical, community-curated command examples using TLDR (tealdeer)
+tldr tar
+
+# View community cheat sheet for a command
+cheat git
+
+# Interactive command-line cheat sheet runner with auto-completion
+navi
+```
+
+#### `cd` / `zoxide` (`z`) / `autojump` (`j`)
+
+Directory navigation tools utilizing frecency algorithms to jump to frequently used folders instantly.
+
+```bash
+# Smart directory jump matching "proj" using Zoxide
+z proj
+
+# Interactive fuzzy search directory selection using Zoxide + fzf
+zi
+
+# Jump to folder matching "docs" using Autojump
+j docs
+```
+
+---
+
 ### UNIX Core Utilities & File Management
 
 #### `find`

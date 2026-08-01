@@ -11,6 +11,7 @@ This repository contains detailed documentation and examples for:
 - **Media & Imaging Processing** - FFmpeg, ImageMagick, WebP tools, and video download utilities
 - **Version Control & Repositories** - Git and GitHub CLI reference
 - **Network Diagnostics & Utilities** - Comprehensive guide for `ping`, `traceroute`, `mtr`, `dig`, `nslookup`, `host`, `curl`, `wget`, `nc`, `socat`, `nmap`, `netstat`, `ss`, `lsof`, `tcpdump`, `tshark`, `iperf3`, `rsync`, `ssh`, `whois`, and more
+- **Text Processing & Modern CLI Utilities** - Modern CLI replacements for search, stream editing, file viewing, data parsing, diffing, process monitoring, and directory navigation (`rg`, `bat`, `sd`, `ast-grep`, `mlr`, `choose`, `delta`, `difftastic`, `tokei`, `hexyl`, `jaq`, `jless`, `eza`, `lsd`, `dust`, `duf`, `procs`, `btop`, `tldr`, `zoxide`, etc.)
 - **UNIX Core Utilities & File Management** - Essential tools like `find`, `xargs`, `tar`, and permissions management
 
 ## 🚀 Quick Start
