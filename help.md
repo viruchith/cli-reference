@@ -120,6 +120,30 @@ http https://api.github.com/users/octocat
 http POST https://httpbin.org/post name=John email=john@example.com
 ```
 
+#### `apktool`
+
+A reverse engineering tool for Android applications. It can decode resources to their original form, rebuild them, and debug `smali` code, making it essential for custom ROMs, localizing apps, and analyzing closed-source applications.
+
+```bash
+# Decode an APK file into a human-readable format (resources, Smali, etc.)
+apktool d my_application.apk -o decoded_app
+
+# Build an APK from a decoded application directory
+apktool b decoded_app -o rebuilt_app.apk
+
+# Decode an APK without disassembling DEX files (no Smali code)
+apktool d my_application.apk -r -o decoded_no_smali
+
+# Decode an APK without decoding resources (keeps resources as binary)
+apktool d my_application.apk -s -o decoded_no_resources
+
+# Install a framework file for a specific Android version (e.g., AOSP)
+apktool if framework-res.apk
+
+# Show help for all available apktool commands and options
+apktool --help
+```
+
 #### `jq`
 
 A lightweight and flexible command-line JSON processor. It lets you slice, filter, map, and transform structured JSON data with ease.
@@ -130,6 +154,27 @@ curl -s https://api.github.com/repos/stedolan/jq | jq '.description'
 
 # Map an array of objects to filter out only specific fields
 cat data.json | jq '[.[] | {name: .name, active: .status}]'
+```
+
+#### `jadx`
+
+A DEX to Java decompiler. It allows you to decompile Android `.apk` files, `dex` files, or `jar` files into readable Java source code, providing a powerful tool for reverse engineering and security analysis.
+
+```bash
+# Decompile an APK file to a specified output directory
+jadx -d output_dir my_application.apk
+
+# Decompile a DEX file and save the output as Java files in a directory
+jadx -d output_dir classes.dex
+
+# Decompile an APK and save resources (like XML, images) in the output directory
+jadx -r -d output_with_resources my_application.apk
+
+# Decompile an APK with verbose logging and include debug information
+jadx --verbose --debug -d debug_output_dir my_application.apk
+
+# Show help for all available jadx commands and options
+jadx --help
 ```
 
 #### `lnav`
