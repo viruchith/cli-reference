@@ -1990,7 +1990,6 @@ zstdcat metrics.json.zst | jq '.status'
 
 # Fast parallel decompression stream output using pigz
 pigz -dc heavy_log.gz | tail -n 50
-```
 
 #### Archive Regex Search (`ripgrep` `rg -z`)
 
@@ -1998,87 +1997,39 @@ Searching regex patterns directly inside compressed files (`.gz`, `.bz2`, `.xz`,
 
 ```bash
 # Search for a pattern inside compressed logs transparently using ripgrep
-rg -z "FATAL_EXCEPTION" /var/log/syslog*.gz
-
-# Search inside zstd compressed archives using ripgrep
-rg -z "user_login" audit_logs.zst
-```
-
-#### `lz4`
-
-Extremely fast lossless compression algorithm prioritizing compression and decompression speeds over file size ratio.
-
-```bash
-# High-speed file compression using LZ4
-lz4 dataset.tar dataset.tar.lz4
-
-# Decompress LZ4 archive file
-lz4 -d dataset.tar.lz4
-```
-
-#### Split Archives (`split` / `csplit` / `7zz` Volume Splitting)
-
-Tools for breaking massive files or archives into smaller chunk volumes for transfer across storage limits.
-
-```bash
-# Split a large file into 100MB chunk files
-split -b 100m large_video.iso part_file_
-
-# Reassemble split chunk files back into single file
-cat part_file_* > restored_video.iso
-
-# Create a multi-volume 7z archive split into 500MB volume chunks
-7zz a -v500m archive_split.7z ./data_folder/
+rg -z "error" *.log.gz
 ```
 
 ---
 
-### UNIX Core Utilities & File Management
+### Forensic Tools
 
-#### `find`
+#### `exiftool`
 
-The fundamental tool used to locate files and folders inside directory trees based on specialized conditions.
+A command-line tool for reading, writing, and editing meta information in a wide variety of file formats (EXIF, GPS, IPTC, XMP, JFIF, GeoTIFF, ICC Profile, Photoshop IRB, FlashPix, AFCP, and ID3).
 
 ```bash
-# Find and instantly delete all files ending in ".tmp" across your home folder
-find ~ -type f -name "*.tmp" -delete
+# Extract all metadata from an image file
+exiftool image.jpg
 
-# Find files modified within the last 24 hours and list them detailed
-find . -type f -mtime -1 -ls
+# Extract GPS data and display it in decimal degrees
+exiftool -GPSLatitude -GPSLongitude -n image.jpg
+
+# Change the creation date of a file (be careful with this!)
+exiftool -CreateDate="2023:01:01 12:00:00" image.jpg
 ```
 
-#### `xargs`
+#### `tika` (Apache Tika)
 
-A tool that reads items from standard input and constructs/executes command lines out of them.
-
-```bash
-# Safely pass a massive list of found logs into a file removal pipeline
-find . -name "*.log" -print0 | xargs -0 rm
-
-# Download a list of URLs contained inside a plain text file in parallel chunks
-cat downloads.txt | xargs -n 1 -P 4 wget
-```
-
-#### `tar`
-
-The standard tape archiving environment used to create, extract, and maintain system archive archives.
+A content detection and analysis framework that extracts text and metadata from over a thousand different file types (DOC, XLS, PPT, PDF, XML, HTML, etc.). It can be run as a standalone server or CLI tool.
 
 ```bash
-# Compress a target folder using maximum gzip extraction parameters
-tar -czvf production_backup.tar.gz /var/www/app
+# Extract text content from a PDF file
+java -jar tika-app.jar -t document.pdf
 
-# Extract a compressed archive block cleanly into an active path folder
-tar -xzvf archive.tar.gz -C /target/directory/
-```
+# Extract metadata from a Word document
+java -jar tika-app.jar -m document.docx
 
-#### `chown` / `chmod`
-
-The baseline systems tools used to update operational user ownership and modification rights patterns.
-
-```bash
-# Change ownership of a folder and all its contents to a specific user and group
-sudo chown -R www-data:www-data /var/www/html
-
-# Adjust access permissions so only the owner can read/write a secure key file
-chmod 600 ~/.ssh/id_rsa
+# Detect the file type of a given file
+java -jar tika-app.jar -d unknown_file
 ```
