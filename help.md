@@ -144,6 +144,49 @@ apktool if framework-res.apk
 apktool --help
 ```
 
+#### `aria2` (`aria2c`)
+
+An ultra-fast, lightweight, multi-protocol and multi-source command-line download utility. It supports HTTP/HTTPS, FTP, SFTP, BitTorrent, and Metalink. `aria2` can download a single file from multiple sources or mirrors simultaneously, and split downloads into multiple segments to maximize available bandwidth utilization.
+
+```bash
+# Download a file from a single URL and specify a custom output filename (-o)
+aria2c -o custom_file.zip "https://example.com/file.zip"
+
+# Accelerate download using multiple connections (-s) and max connections per server (-x)
+aria2c -s 16 -x 16 -k 1M "https://example.com/largefile.iso"
+
+# Download a file simultaneously from multiple mirror URLs
+aria2c "https://mirror1.example.com/file.iso" "https://mirror2.example.com/file.iso"
+
+# Resume an interrupted or incomplete download (-c / --continue)
+aria2c -c "https://example.com/largefile.zip"
+
+# Batch download multiple URLs listed in a text file (-i) with concurrent download limit (-j)
+aria2c -i urls.txt -j 4
+
+# Restrict download and upload speed limits (--max-download-limit, --max-upload-limit)
+aria2c --max-download-limit=5M --max-upload-limit=500k "https://example.com/file.zip"
+
+# Download via BitTorrent file or Magnet link (and stop seeding upon completion)
+aria2c --seed-time=0 "https://example.com/ubuntu.torrent"
+aria2c --seed-time=0 "magnet:?xt=urn:btih:EXAMPLEHASH..."
+
+# View files inside a torrent and their index numbers without downloading (-S)
+aria2c -S file.torrent
+
+# Download specific files from a multi-file BitTorrent transfer by index (--select-file)
+aria2c --select-file=1,3-5 file.torrent
+
+# Download with HTTP basic authentication and custom request headers
+aria2c --http-user="username" --http-passwd="password" --header="Authorization: Bearer token" "https://example.com/protected.zip"
+
+# Run aria2 as a background RPC daemon for web UIs (e.g., AriaNg, webui-aria2)
+aria2c --enable-rpc --rpc-listen-all=true --rpc-secret="mysecret" -D
+
+# Load options from a custom configuration file (--conf-path)
+aria2c --conf-path=~/.config/aria2/aria2.conf
+```
+
 #### `jq`
 
 A lightweight and flexible command-line JSON processor. It lets you slice, filter, map, and transform structured JSON data with ease.

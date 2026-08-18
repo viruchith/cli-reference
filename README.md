@@ -27,6 +27,7 @@ Each tool entry includes:
 
 ### Tools Included
 
+- `aria2` / `aria2c` - Multi-protocol multi-source download utility
 - `yt-dlp` - Download videos from YouTube, TikTok, Instagram, and more
 - `ffmpeg` / `ffprobe` / `ffplay` - Multimedia processing
 - `jq` - JSON processing
