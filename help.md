@@ -449,6 +449,363 @@ uv venv
 uv pip install requests
 ```
 
+#### `pyenv`
+
+Python Version Manager (`pyenv`) lets you easily install, manage, and switch between multiple versions of Python. It operates by injecting a directory of executable shims (`~/.pyenv/shims`) at the beginning of your `PATH`. When you run `python`, `pip`, or a Python CLI entrypoint, the shim determines which Python version to invoke based on shell environment variables (`PYENV_VERSION`), per-directory `.python-version` files, or the machine-wide global setting.
+
+`pyenv` builds Python runtimes directly from source via `python-build` (supporting CPython, PyPy, GraalPython, Anaconda, and Miniconda) and integrates with the `pyenv-virtualenv` plugin to create isolated per-project virtual environments.
+
+```bash
+# ---------------------------------------------------------
+# Installation & Shell Configuration
+# ---------------------------------------------------------
+# Install pyenv via Homebrew (macOS) or pyenv-installer script (Linux)
+brew install pyenv pyenv-virtualenv
+# or: curl https://pyenv.run | bash
+
+# Add pyenv to your shell environment (~/.zshrc or ~/.bashrc)
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+
+# macOS prerequisite build dependencies via Homebrew:
+# brew install openssl readline sqlite3 xz zlib tcl-tk
+
+# Linux (Debian/Ubuntu) prerequisite build dependencies:
+# sudo apt update && sudo apt install -y build-essential libssl-dev zlib1g-dev \
+#   libbz2-dev libreadline-dev libsqlite3-dev libncursesw5-dev xz-utils tk-dev libffi-dev liblzma-dev
+
+# ---------------------------------------------------------
+# Inspecting Available Python Versions
+# ---------------------------------------------------------
+# List all available Python releases installable via pyenv
+pyenv install --list
+
+# Filter available Python versions matching specific major releases
+pyenv install -l | grep -E "^\s*3\.(11|12|13)"
+
+# List available alternative runtimes (PyPy, Anaconda, Stackless)
+pyenv install -l | grep -E "(pypy|miniconda)"
+
+# ---------------------------------------------------------
+# Installing & Compiling Python Runtimes
+# ---------------------------------------------------------
+# Install a specific CPython release compiled from source
+pyenv install 3.12.2
+pyenv install 3.11.8
+
+# Install with custom compilation flags (e.g., shared library support or optimization)
+env PYTHON_CONFIGURE_OPTS="--enable-shared --enable-optimizations" pyenv install 3.12.2
+
+# Install PyPy (JIT-compiled Python) or Miniconda distribution
+pyenv install pypy3.10-7.3.15
+pyenv install miniconda3-latest
+
+# Uninstall an installed Python version to free up disk space
+pyenv uninstall 3.10.12
+
+# ---------------------------------------------------------
+# Listing & Viewing Versions
+# ---------------------------------------------------------
+# List all installed Python versions managed by pyenv (active version marked with *)
+pyenv versions
+
+# Show the currently active Python version and the config file setting it
+pyenv version
+
+# Locate the absolute filesystem path to the active binary
+pyenv which python
+pyenv which pip
+pyenv which pytest
+
+# Print the installation prefix directory for a specific version
+pyenv prefix
+pyenv prefix 3.12.2
+
+# ---------------------------------------------------------
+# Switching Versions (Global, Local, Shell)
+# ---------------------------------------------------------
+# Set the machine-wide global default Python version
+pyenv global 3.12.2
+
+# Set a project-specific Python version (writes to local .python-version file)
+pyenv local 3.11.8
+
+# Set multiple versions simultaneously (essential for testing across versions with tox)
+pyenv local 3.12.2 3.11.8 3.10.13
+
+# Set a temporary Python version for the current shell session only
+pyenv shell 3.12.2
+
+# Unset shell or local version overrides
+pyenv shell --unset
+rm -f .python-version
+
+# Rehash pyenv shims (run after installing new CLI packages with pip like black, ruff, etc.)
+pyenv rehash
+
+# Run a command inside a specific Python environment without changing current version
+pyenv exec python --version
+pyenv exec pip list
+
+# ---------------------------------------------------------
+# Virtual Environment Management (pyenv-virtualenv)
+# ---------------------------------------------------------
+# Create an isolated virtual environment based on an installed Python version
+pyenv virtualenv 3.12.2 my-api-env
+
+# List all virtual environments managed by pyenv
+pyenv virtualenvs
+
+# Bind the current directory to the virtual environment (auto-activates when entering directory)
+pyenv local my-api-env
+
+# Manually activate or deactivate the virtual environment in current shell
+pyenv activate my-api-env
+pyenv deactivate
+
+# Delete an obsolete virtual environment
+pyenv virtualenv-delete my-api-env
+
+# ---------------------------------------------------------
+# Maintenance & Updates
+# ---------------------------------------------------------
+# Update pyenv and python-build definitions to get access to newly released Python versions
+pyenv update
+# (Or if installed via git clone: git -C $(pyenv root) pull)
+```
+
+#### `sdkman` (`sdk`)
+
+Software Development Kit Manager (SDKMAN!) is a CLI tool for managing parallel versions of multiple Software Development Kits on Unix-based systems (macOS, Linux, WSL). While widely recognized as the standard version manager for the JVM ecosystem (managing OpenJDK distributions like Eclipse Temurin, Amazon Corretto, Azul Zulu, GraalVM, BellSoft Liberica), it also manages build tools, languages, and CLI frameworks including Gradle, Maven, Kotlin, Scala, Groovy, Micronaut, Quarkus, Spring Boot CLI, and VisualVM.
+
+SDKMAN handles downloading, unpacking, switching shell symlinks, setting `PATH` and `*_HOME` environment variables, and supports directory-level environment switching via `.sdkmanrc` files.
+
+```bash
+# ---------------------------------------------------------
+# Installation & Initialization
+# ---------------------------------------------------------
+# Install SDKMAN via the official curl installer script
+curl -s "https://get.sdkman.io" | bash
+
+# Initialize SDKMAN in the current shell session (or add to ~/.zshrc / ~/.bashrc)
+source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+# Verify SDKMAN installation and display the installed version
+sdk version
+
+# Display full command help and available options
+sdk help
+
+# ---------------------------------------------------------
+# Discovery & Candidate Inspection
+# ---------------------------------------------------------
+# List all available SDK candidates (Java, Gradle, Maven, Kotlin, etc.)
+sdk list
+
+# List all available versions and distributions for a specific candidate (e.g., Java)
+sdk list java
+
+# List available versions for build tools and languages
+sdk list gradle
+sdk list maven
+sdk list kotlin
+
+# ---------------------------------------------------------
+# Installing SDKs & Versions
+# ---------------------------------------------------------
+# Install the latest stable default version of a candidate
+sdk install gradle
+sdk install maven
+
+# Install a specific Java distribution and version (e.g., Eclipse Temurin JDK 21)
+sdk install java 21.0.2-tem
+
+# Install Amazon Corretto or Azul Zulu Java LTS releases
+sdk install java 17.0.10-amzn
+sdk install java 17.0.10-zulu
+
+# Install GraalVM Community Edition for native image compilation
+sdk install java 21.0.2-graalce
+
+# Install a specific version of Gradle or Maven
+sdk install gradle 8.6
+sdk install maven 3.9.6
+
+# Register an existing local Java installation (e.g., Apple Silicon macOS native JDK)
+sdk install java local-jdk21 /Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+
+# ---------------------------------------------------------
+# Switching & Active Version Management
+# ---------------------------------------------------------
+# Switch to a specific version for the current shell session only
+sdk use java 17.0.10-tem
+sdk use gradle 8.5
+
+# Set a candidate version as the global machine default
+sdk default java 21.0.2-tem
+sdk default maven 3.9.6
+
+# Display the currently active version of all candidates
+sdk current
+
+# Display the currently active version for a specific candidate
+sdk current java
+sdk current gradle
+
+# Print the installation path of a candidate version (useful for scripting JAVA_HOME)
+sdk home java 21.0.2-tem
+export JAVA_HOME=$(sdk home java 21.0.2-tem)
+
+# ---------------------------------------------------------
+# Project-Specific Configuration (.sdkmanrc)
+# ---------------------------------------------------------
+# Generate a .sdkmanrc file in the current directory with current SDK versions
+sdk env init
+
+# Switch the shell environment to match the versions specified in .sdkmanrc
+sdk env
+
+# Reset candidate versions back to their global defaults after leaving project
+sdk env clear
+
+# Tip: Enable automatic switching on cd by setting `sdkman_auto_env=true` in ~/.sdkman/etc/config
+
+# ---------------------------------------------------------
+# Upgrades, Uninstallation & Maintenance
+# ---------------------------------------------------------
+# Fetch the latest candidate lists and available version metadata from SDKMAN servers
+sdk update
+
+# Check for outdated candidates and interactively upgrade them
+sdk upgrade
+
+# Upgrade a specific candidate to its latest available version
+sdk upgrade gradle
+
+# Update the SDKMAN CLI itself to the latest release
+sdk selfupdate
+sdk selfupdate force
+
+# Uninstall an installed version of a candidate
+sdk uninstall java 11.0.22-tem
+sdk uninstall gradle 7.6.4
+
+# Enable or disable offline mode when working without internet connectivity
+sdk offline enable
+sdk offline disable
+
+# Clear cached candidate archives, temporary downloads, and broadcast caches
+sdk flush archives
+sdk flush temp
+sdk flush candidates
+```
+
+#### `jenv`
+
+Java Environment Manager (`jenv`) is a CLI tool modeled after `rbenv` and `pyenv` designed to seamlessly manage and switch between multiple Java Development Kits (JDKs) on macOS and Linux. Unlike SDKMAN, `jenv` does not download or install JDKs itself; instead, it registers existing JDK installations already present on your system (such as JDKs installed via Homebrew, macOS `/Library/Java/JavaVirtualMachines`, Linux package managers, or direct archive downloads) and dynamically switches between them using shell shims (`~/.jenv/shims`).
+
+`jenv` manages `JAVA_HOME` export, per-directory version files (`.java-version`), and offers plugins for seamless integration with build systems like Maven, Gradle, SBT, and Ant.
+
+```bash
+# ---------------------------------------------------------
+# Installation & Shell Setup
+# ---------------------------------------------------------
+# Install jenv via Homebrew (macOS)
+brew install jenv
+
+# Add jenv shims and autocompletion to your shell configuration (~/.zshrc or ~/.bashrc)
+export PATH="$HOME/.jenv/bin:$PATH"
+eval "$(jenv init -)"
+
+# Reload your shell configuration
+source ~/.zshrc
+
+# Run diagnostics to check for common environment or shim configuration issues
+jenv doctor
+
+# ---------------------------------------------------------
+# Adding & Registering Existing JDKs
+# ---------------------------------------------------------
+# Add a macOS system-installed JDK from /Library/Java/JavaVirtualMachines/
+jenv add /Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
+jenv add /Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
+
+# Add a Homebrew-installed OpenJDK on macOS
+jenv add $(brew --prefix openjdk@17)/libexec/openjdk.jdk/Contents/Home
+jenv add $(brew --prefix openjdk@21)/libexec/openjdk.jdk/Contents/Home
+
+# Add a Linux system JDK from /usr/lib/jvm/
+jenv add /usr/lib/jvm/java-17-openjdk-amd64
+jenv add /usr/lib/jvm/java-21-openjdk-amd64
+
+# Add an SDKMAN-downloaded JDK into jenv management
+jenv add ~/.sdkman/candidates/java/21.0.2-tem
+
+# ---------------------------------------------------------
+# Listing & Viewing Versions
+# ---------------------------------------------------------
+# List all JDK versions registered in jenv (active version marked with *)
+jenv versions
+
+# Show the currently active Java version and the scope where it was set
+jenv version
+
+# Show which actual executable binary is being invoked by the shim
+jenv which java
+jenv which javac
+
+# Print the directory path of the active JDK (equivalent to JDK home)
+jenv prefix
+jenv javahome
+
+# ---------------------------------------------------------
+# Switching Java Versions (Global, Local, Shell)
+# ---------------------------------------------------------
+# Set the machine-wide global Java version
+jenv global 21.0
+# Or use full alias / vendor name:
+jenv global temurin64-21.0.2
+
+# Set a project-specific Java version (creates a .java-version file in current dir)
+jenv local 17.0
+
+# Set a temporary Java version for the current terminal session only
+jenv shell 11.0
+
+# Unset the local directory or shell-specific version override
+jenv local --unset
+jenv shell --unset
+
+# Execute a command directly using a specific Java version without switching
+jenv exec java -jar application.jar
+
+# ---------------------------------------------------------
+# Essential Plugins (JAVA_HOME & Build Tool Integration)
+# ---------------------------------------------------------
+# Enable the export plugin to automatically sync and export JAVA_HOME variable
+jenv enable-plugin export
+
+# Enable build tool plugins so Maven, Gradle, Ant, and SBT respect the active JDK
+jenv enable-plugin maven
+jenv enable-plugin gradle
+jenv enable-plugin sbt
+
+# List all available and enabled jenv plugins
+jenv plugins
+
+# Disable a previously enabled plugin
+jenv disable-plugin maven
+
+# ---------------------------------------------------------
+# Managing JDK Aliases & Removal
+# ---------------------------------------------------------
+# Remove an uninstalled or deprecated JDK version from jenv registry
+jenv remove 17.0.2
+jenv remove temurin64-17.0.2
+```
+
 #### `shasum` / `sha256sum` / `sha512sum`
 
 Utilities used to calculate and verify SHA cryptographic hashes to ensure file integrity.

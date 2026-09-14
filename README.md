@@ -7,7 +7,7 @@ A comprehensive command-line utilities and tools reference guide for macOS and L
 This repository contains detailed documentation and examples for:
 
 - **Command-Line Utilities & Tools** - Essential CLI tools like `cheat`, `fd`, `fzf`, `gh`, `jq`, `rclone`, `ripgrep`, and more
-- **Development Language Runtimes & Package Managers** - Node.js, Python, `pnpm`, `uv`, and other runtime environments
+- **Development Language Runtimes & Package Managers** - Node.js, Python, `pnpm`, `uv`, `sdkman`, `jenv`, `pyenv`, and runtime environment managers
 - **Media & Imaging Processing** - FFmpeg, ImageMagick, WebP tools, and video download utilities
 - **Version Control & Repositories** - Git and GitHub CLI reference
 - **Network Diagnostics & Utilities** - Comprehensive guide for `ping`, `traceroute`, `mtr`, `dig`, `nslookup`, `host`, `curl`, `wget`, `nc`, `socat`, `nmap`, `netstat`, `ss`, `lsof`, `tcpdump`, `tshark`, `iperf3`, `rsync`, `ssh`, `whois`, `stuntman` (`stunclient`/`stunserver`), and more
@@ -34,6 +34,7 @@ Each tool entry includes:
 - `ripgrep` - Fast file search
 - `git` / `gh` - Version control
 - `rclone` - Cloud storage sync
+- `sdkman` / `jenv` / `pyenv` - SDK, Java, and Python environment and version managers
 - And many more...
 
 ## 📝 Usage
