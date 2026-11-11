@@ -232,6 +232,30 @@ lnav /var/log/system.log
 lnav ~/logs/*.gz
 ```
 
+#### `mole` (`mo`)
+
+Open-source Mac and PC cleaner. Keep your machine clean, light, and running like new. Fast CLI, plus native Mac and Windows apps.
+
+```bash
+# Launch interactive terminal UI dashboard
+mo
+
+# Clean system caches, logs, and temporary junk files
+mo clean
+
+# Preview files eligible for cleanup without deleting (dry run)
+mo clean --dry-run
+
+# Thoroughly uninstall an application and delete lingering remnants
+mo uninstall
+
+# Analyze disk space usage and large file breakdown
+mo analyze
+
+# Check real-time system performance and resource status
+mo status
+```
+
 #### `nmap`
 
 A powerful network exploration tool and security/port scanner. It is widely used for network inventory, managing service upgrade schedules, and monitoring host or service uptime.
@@ -1755,6 +1779,12 @@ gping 8.8.8.8
 
 # Compare latency between multiple destinations simultaneously
 gping 8.8.8.8 1.1.1.1 9.9.9.9
+
+# Ping with a custom update buffer/window duration (e.g., 30s)
+gping --buffer 30 1.1.1.1
+
+# Graph execution time of a command instead of network pings
+gping --cmd "curl -s -o /dev/null https://example.com"
 ```
 
 #### `trippy` (`trip`)
